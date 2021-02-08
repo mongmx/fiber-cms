@@ -26,11 +26,11 @@ import (
 // @title Fiber CMS
 // @version 1.0
 // @description CMS system made from Fiber
-// @termsOfService http://fiber-cms.io/terms/
+// @termsOfService https://fiber-cms.io/terms/
 // @contact.name Support
 // @contact.email support@fiber-cms.io
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name MIT License
+// @license.url https://github.com/mongmx/fiber-cms/blob/main/LICENSE
 // @host localhost:8080
 // @BasePath /
 
