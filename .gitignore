@@ -1,3 +1,24 @@
+.idea/*
+*.swp
+*.iml
+.vscode/
+
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+.env
+.DS_Store
+app
+app.exe
 # Binaries for programs and plugins
 *.exe
 *.exe~
