@@ -17,6 +17,8 @@ import (
 	"github.com/gofiber/template/html"
 	"github.com/joho/godotenv"
 	_ "github.com/mongmx/fiber-cms/docs"
+	"github.com/mongmx/fiber-cms/domain/auth"
+	"github.com/mongmx/fiber-cms/domain/post"
 	"github.com/mongmx/fiber-cms/middleware"
 	"golang.org/x/sync/errgroup"
 
@@ -102,15 +104,10 @@ func mainApp() *fiber.App {
 		Root: pkger.Dir("/views/assets"),
 	}))
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.Render("pages/index", fiber.Map{
-			"Title": "Hello, World!",
-		}, "layouts/main")
+		return c.Render("pages/auth/login", fiber.Map{})
 	})
-	app.Get("/post/list", func(c *fiber.Ctx) error {
-		return c.Render("pages/post/index", fiber.Map{
-			"Title": "Hello, World!",
-		}, "layouts/main")
-	})
+	auth.Router(app)
+	post.Router(app)
 	app.Use(func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).Render("errors/404", fiber.Map{})
 	})
