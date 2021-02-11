@@ -1,15 +1,10 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/http"
 	"os"
-	"os/signal"
 	"strconv"
-	"time"
 
-	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -19,8 +14,7 @@ import (
 	_ "github.com/mongmx/fiber-cms/docs"
 	"github.com/mongmx/fiber-cms/domain/auth"
 	"github.com/mongmx/fiber-cms/domain/post"
-	"github.com/mongmx/fiber-cms/middleware"
-	"golang.org/x/sync/errgroup"
+	"github.com/pagongamedev/godd"
 
 	"github.com/markbates/pkger"
 )
@@ -37,63 +31,35 @@ import (
 // @BasePath /
 
 func main() {
+	// Set Environment
 	err := prepareEnvFile()
-	if err != nil {
-		log.Fatal("error prepare .env file")
-	}
+	godd.MustError(err)
+
 	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("error loading .env file")
-	}
+	godd.MustError(err, "error loading .env file")
+
 	cfgDoc, err := strconv.ParseBool(os.Getenv("APP_DOC"))
-	if err != nil {
-		log.Fatal(err)
-	}
+	godd.MustError(err)
+
 	cfgMonitor, err := strconv.ParseBool(os.Getenv("APP_MONITOR"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	fiberMain := mainApp()
-	fiberDoc := docApp()
-	fiberMetrics := metricsApp(fiberMain)
-	var eg errgroup.Group
-	eg.Go(func() error {
-		return fiberMain.Listen(":8080")
-	})
+	godd.MustError(err)
+
+	// Set Portal
+	portal := godd.NewPortal()
+	appMain := appMain()
+
+	portal.AppendApp(appMain, ":8180")
 	if cfgDoc {
-		eg.Go(func() error {
-			return fiberDoc.Listen(":8081")
-		})
+		portal.AppendApp(godd.AppAPIDocument(), ":8181")
 	}
 	if cfgMonitor {
-		eg.Go(func() error {
-			return fiberMetrics.Listen(":8082")
-		})
+		portal.AppendApp(godd.AppMetricsPrometheus(appMain), ":8182")
 	}
-	if err := eg.Wait(); err != nil {
-		log.Fatal(err)
-	}
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := fiberMain.Shutdown(); err != nil {
-		log.Fatal(err)
-	}
-	if cfgDoc {
-		if err := fiberDoc.Shutdown(); err != nil {
-			log.Fatal(err)
-		}
-	}
-	if cfgMonitor {
-		if err := fiberMetrics.Shutdown(); err != nil {
-			log.Fatal(err)
-		}
-	}
+
+	portal.StartServer()
 }
 
-func mainApp() *fiber.App {
+func appMain() *fiber.App {
 	engine := html.NewFileSystem(pkger.Dir("/views"), ".html")
 	app := fiber.New(fiber.Config{
 		Views: engine,
@@ -114,22 +80,22 @@ func mainApp() *fiber.App {
 	return app
 }
 
-func docApp() *fiber.App {
-	app := fiber.New()
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.Redirect("/swagger/index.html", http.StatusMovedPermanently)
-	})
-	app.Get("/swagger/*", swagger.Handler)
-	return app
-}
+// func docApp() *fiber.App {
+// 	app := fiber.New()
+// 	app.Get("/", func(c *fiber.Ctx) error {
+// 		return c.Redirect("/swagger/index.html", http.StatusMovedPermanently)
+// 	})
+// 	app.Get("/swagger/*", swagger.Handler)
+// 	return app
+// }
 
-func metricsApp(mainApp *fiber.App) *fiber.App {
-	app := fiber.New()
-	promMiddleware := middleware.NewPromMiddleware("fiber", "http")
-	promMiddleware.Register(mainApp)
-	promMiddleware.SetupPath(app)
-	return app
-}
+// func metricsApp(mainApp *fiber.App) *fiber.App {
+// 	app := fiber.New()
+// 	promMiddleware := middleware.NewPromMiddleware("fiber", "http")
+// 	promMiddleware.Register(mainApp)
+// 	promMiddleware.SetupPath(app)
+// 	return app
+// }
 
 func prepareEnvFile() error {
 	envFile, err := os.OpenFile(".env", os.O_CREATE|os.O_WRONLY, 0644)
