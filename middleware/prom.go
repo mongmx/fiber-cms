@@ -81,7 +81,7 @@ func (m *PromMiddleware) registerDefaultMetrics() {
 // NewPromMiddleware for prometheus
 func NewPromMiddleware(namespace string, subsystem string) *PromMiddleware {
 	return &PromMiddleware{
-		Namespace:  namespace,
-		Subsystem:  subsystem,
+		Namespace: namespace,
+		Subsystem: subsystem,
 	}
 }
