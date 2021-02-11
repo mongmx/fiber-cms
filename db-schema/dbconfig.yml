@@ -1,0 +1,11 @@
+development:
+  dialect: postgres
+  datasource: host=db dbname=fiber_cms user=docker password=docker sslmode=disable
+  dir: postgres
+  table: migrations
+
+localhost:
+  dialect: postgres
+  datasource: host=127.0.0.1 dbname=fiber_cms user=mongmx sslmode=disable
+  dir: postgres
+  table: migrations
