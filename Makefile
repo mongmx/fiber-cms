@@ -1,5 +1,5 @@
 dev:
-	go run main.go
+	fiber dev
 
 build:
 	pkger && go build -o app

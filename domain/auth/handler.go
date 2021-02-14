@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/session"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 // Handler - HTTP auth handler.
@@ -61,7 +63,24 @@ func (h Handler) postLogin(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Render("pages/auth/login", fiber.Map{"Error": err.Error()})
 	}
-	return c.Redirect("/auth/profile")
+	token, err := h.jwtGenerate(&cred)
+	if err != nil {
+		return c.Render("pages/auth/login", fiber.Map{"Error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"status": "success", "message": "Success login", "data": token})
+}
+
+func (h Handler) jwtGenerate(cred *Credentials) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["identity"] = cred.Email
+	claims["admin"] = true
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	t, err := token.SignedString([]byte("secret"))
+	if err != nil {
+		return "", fiber.ErrInternalServerError
+	}
+	return t, nil
 }
 
 func (h Handler) getLogout(c *fiber.Ctx) error {

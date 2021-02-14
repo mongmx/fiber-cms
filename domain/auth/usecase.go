@@ -1,6 +1,10 @@
 package auth
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"github.com/form3tech-oss/jwt-go"
+	"github.com/gofiber/fiber/v2"
+	"golang.org/x/crypto/bcrypt"
+)
 
 // UseCase - auth usecase APIs.
 type UseCase interface {
@@ -20,21 +24,21 @@ func NewUseCase(repo Repository) UseCase {
 	}
 }
 
-func (c useCase) register(user *User) error {
-	user, err := c.repo.createUser(user)
+func (u useCase) register(user *User) error {
+	user, err := u.repo.createUser(user)
 	if err != nil {
 		return err
 	}
 	user.Auth.UserID = user.ID
-	_, err = c.repo.createAuth(user.Auth)
+	_, err = u.repo.createAuth(user.Auth)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c useCase) login(cred Credentials, sessionToken string) error {
-	user, err := c.repo.findUserByEmail(cred.Email)
+func (u useCase) login(cred Credentials, sessionToken string) error {
+	user, err := u.repo.findUserByEmail(cred.Email)
 	if err != nil {
 		return err
 	}
@@ -42,17 +46,28 @@ func (c useCase) login(cred Credentials, sessionToken string) error {
 	if err != nil {
 		return err
 	}
-	err = c.repo.storeSessionUser(sessionToken, user)
+	err = u.repo.storeSessionUser(sessionToken, user)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c useCase) profile(sessionToken string) (User, error) {
-	user, err := c.repo.getSessionUser(sessionToken)
+func (u useCase) profile(sessionToken string) (User, error) {
+	user, err := u.repo.getSessionUser(sessionToken)
 	if err != nil {
 		return User{}, err
 	}
 	return user, nil
+}
+
+func (u useCase) validToken(c *fiber.Ctx) bool {
+	token := c.Locals("jwt").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	sessionToken := claims["session_id"].(string)
+	user, _ := u.repo.getSessionUser(sessionToken)
+	if user.ID <= 0 {
+		return false
+	}
+	return true
 }
