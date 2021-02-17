@@ -15,16 +15,6 @@ func Router(app *fiber.App, u UseCase) {
 		g.Get("/login", h.getLogin)
 		g.Post("/login", h.postLogin)
 		g.Get("/logout", h.getLogout)
-		g.Get("/profile", mustLogin(), h.getProfile)
-	}
-}
-
-func mustLogin() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		u, ok := c.Locals("user").(*middleware.User)
-		if !ok || u.ID <= 0 {
-			return c.Redirect("/auth/login")
-		}
-		return c.Next()
+		g.Get("/profile", middleware.MustLogin(), h.getProfile)
 	}
 }

@@ -50,3 +50,13 @@ type User struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at"`
 }
+
+func MustLogin() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		u, ok := c.Locals("user").(*User)
+		if !ok || u.ID <= 0 {
+			return c.Redirect("/auth/login")
+		}
+		return c.Next()
+	}
+}

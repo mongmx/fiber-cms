@@ -106,7 +106,7 @@ func mainApp() *fiber.App {
 	}))
 
 	//app.Use(logger.New())
-	//app.Use(recover.New())
+	//app.Use(recover.New()) // use with panic
 
 	postgresDB := initPostgres()
 	redisStorage := initRedis()
