@@ -1,6 +1,6 @@
 development:
   dialect: postgres
-  datasource: host=db dbname=fiber_cms user=docker password=docker sslmode=disable
+  datasource: host=postgreshost dbname=fiber_cms user=docker password=docker sslmode=disable
   dir: postgres
   table: migrations
 
